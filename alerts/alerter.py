@@ -187,7 +187,11 @@ class Alerter:
 
         if self._settings.telegram_bot_token and self._settings.telegram_chat_id:
             if bypass_rate_limit or self._check_rate_limit("telegram", level_str):
-                tasks.append(self._send_telegram(full_message))
+                tasks.append(self._send_telegram(full_message, self._settings.telegram_chat_id))
+
+        if self._settings.telegram_bot_token and self._settings.telegram_group_id_token:
+            if bypass_rate_limit or self._check_rate_limit("telegram_group", level_str):
+                tasks.append(self._send_telegram(full_message, self._settings.telegram_group_id_token))
 
         if self._settings.smtp_user and self._settings.alert_email_to:
             if bypass_rate_limit or self._check_rate_limit("email", level_str):
@@ -201,23 +205,23 @@ class Alerter:
 
     # ── Telegram ──────────────────────────────────────────────────────────────
 
-    async def _send_telegram(self, text: str) -> None:
-        """Send message via Telegram Bot API (free)."""
+    async def _send_telegram(self, text: str, chat_id: str) -> None:
+        """Send message to a specific Telegram chat_id or group_id."""
         url = (
             f"https://api.telegram.org/bot"
             f"{self._settings.telegram_bot_token}/sendMessage"
         )
         payload = {
-            "chat_id": self._settings.telegram_chat_id,
+            "chat_id": chat_id,
             "text": text[:4096],  # Telegram max length
             "parse_mode": "HTML",
         }
         try:
             resp = await self._http.post(url, json=payload)
             resp.raise_for_status()
-            logger.debug("Telegram alert sent")
+            logger.debug("Telegram alert sent", extra={"chat_id": chat_id})
         except Exception as exc:
-            logger.error("Telegram send failed", extra={"error": str(exc)})
+            logger.error("Telegram send failed", extra={"chat_id": chat_id, "error": str(exc)})
             raise
 
     # ── Email ─────────────────────────────────────────────────────────────────

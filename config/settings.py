@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     # ── Telegram alerts ───────────────────────────────────────────────────────
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
+    telegram_group_id_token: str = ""  # optional group chat ID (e.g. -1002544660979)
 
     # ── Email alerts ──────────────────────────────────────────────────────────
     smtp_host: str = "smtp.gmail.com"
